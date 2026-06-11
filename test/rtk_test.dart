@@ -35,6 +35,34 @@ void main() {
   });
 
   group('RTK', () {
+    test('instance before init throws', () {
+      expect(() => RTK.instance, throwsStateError);
+    });
+
+    test('telemetry calls before init do not throw', () {
+      expect(() => RTK.track('feature_used'), returnsNormally);
+      expect(() => RTK.captureError(StateError('failed')), returnsNormally);
+      expect(() => RTK.addBreadcrumb('launch_started'), returnsNormally);
+      expect(
+        () => RTK.setSuperProperties({'source': 'startup'}),
+        returnsNormally,
+      );
+      expect(() => RTK.instance, throwsStateError);
+    });
+
+    test('flush before init completes without starting the SDK', () async {
+      await expectLater(RTK.flush(), completes);
+
+      expect(() => RTK.instance, throwsStateError);
+    });
+
+    test('setOptOut before init is applied when initialized', () async {
+      await RTK.setOptOut(true);
+      await RTK.init(config());
+
+      expect(RTK.instance.isOptedOut, isTrue);
+    });
+
     test('init installs a singleton client', () async {
       await RTK.init(config());
 

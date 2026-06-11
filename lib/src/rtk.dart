@@ -384,7 +384,7 @@ abstract final class RTK {
   }
 
   static void track(String name, {Map<String, Object?>? properties}) {
-    instance.track(name, properties: properties);
+    _instance?.track(name, properties: properties);
   }
 
   static void captureError(
@@ -392,7 +392,7 @@ abstract final class RTK {
     StackTrace? stackTrace,
     Map<String, Object?>? properties,
   }) {
-    instance.captureError(
+    _instance?.captureError(
       error,
       stackTrace: stackTrace,
       properties: properties,
@@ -400,14 +400,25 @@ abstract final class RTK {
   }
 
   static void addBreadcrumb(String name, {Map<String, Object?>? properties}) {
-    instance.addBreadcrumb(name, properties: properties);
+    _instance?.addBreadcrumb(name, properties: properties);
   }
 
   static void setSuperProperties(Map<String, Object?> properties) {
-    instance.setSuperProperties(properties);
+    _instance?.setSuperProperties(properties);
   }
 
-  static Future<void> flush() => instance.flush();
+  static Future<void> flush() {
+    return _instance?.flush() ?? Future<void>.value();
+  }
 
-  static Future<void> setOptOut(bool value) => instance.setOptOut(value);
+  static Future<void> setOptOut(bool value) async {
+    final client = _instance;
+    if (client != null) {
+      await client.setOptOut(value);
+      return;
+    }
+    WidgetsFlutterBinding.ensureInitialized();
+    final storage = await RTKStorage.create();
+    await storage.setOptOut(value);
+  }
 }
