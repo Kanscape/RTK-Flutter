@@ -11,6 +11,9 @@ class RTKConfig {
     required String environment,
     this.appVersion,
     this.buildNumber,
+    this.runtimePlatform,
+    @Deprecated(
+        'Use runtimePlatform. Project SDK selection is sdk_family on Rena server.')
     this.platform,
     this.osName,
     this.osVersion,
@@ -89,6 +92,9 @@ class RTKConfig {
   final String environment;
   final String? appVersion;
   final String? buildNumber;
+  final String? runtimePlatform;
+  @Deprecated(
+      'Use runtimePlatform. Project SDK selection is sdk_family on Rena server.')
   final String? platform;
   final String? osName;
   final String? osVersion;
@@ -105,6 +111,11 @@ class RTKConfig {
   final Duration minRetryDelay;
   final Duration maxRetryDelay;
   final RTKBeforeSend? beforeSend;
+
+  String? get effectiveRuntimePlatform {
+    // ignore: deprecated_member_use_from_same_package
+    return runtimePlatform ?? platform;
+  }
 
   Uri get batchUri =>
       endpoint.replace(path: _appendPath(endpoint.path, 'v1/batch'));

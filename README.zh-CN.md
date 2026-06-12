@@ -57,9 +57,11 @@ await RTK.init(
 );
 ```
 
-`publicWriteKey` 决定 Rena server 上的 project scope。SDK 不向 `/v1/batch` 发送 `project_id`。
+`publicWriteKey` 是通过 RTC Web 或 Rena management API 创建的 project public write key。SDK 不向 `/v1/batch` 发送 `project_id`。
 
-`platform` 和 `locale` 未传时，由 Flutter 运行环境推断；`debug` 默认跟随 Flutter debug mode。
+Rena project 创建时应使用 `sdk_family=flutter`。SDK 通过 telemetry context 上报运行环境 platform，比如 `android`、`iOS`、`macOS` 或 `web`；它不是 project-level 字段。
+
+`runtimePlatform` 和 `locale` 未传时，由 Flutter 运行环境推断。旧的 `platform` option 仍兼容已有接入。`debug` 默认跟随 Flutter debug mode。
 
 ## 事件
 

@@ -275,7 +275,7 @@ class RenaRTK {
   }
 
   RTKContext get _context => RTKContext(
-        platform: config.platform ?? _defaultPlatform,
+        platform: config.effectiveRuntimePlatform ?? _defaultPlatform,
         environment: config.environment,
         appVersion: config.appVersion,
         buildNumber: config.buildNumber,

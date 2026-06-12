@@ -18,7 +18,7 @@ void main() {
         environment: 'production',
         appVersion: '1.0.0',
         buildNumber: '100',
-        platform: 'ios',
+        runtimePlatform: 'ios',
         debug: false,
       );
 

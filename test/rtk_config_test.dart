@@ -70,6 +70,17 @@ void main() {
       expect(config.debug, isFalse);
     });
 
+    test('names configured runtime platform separately from SDK family', () {
+      final config = RTKConfig(
+        endpoint: Uri.parse('https://rena.example.com'),
+        publicWriteKey: 'public_test',
+        environment: 'production',
+        runtimePlatform: 'android',
+      );
+
+      expect(config.runtimePlatform, 'android');
+    });
+
     test('rejects non-positive timing configuration', () {
       expect(
         () => RTKConfig(
