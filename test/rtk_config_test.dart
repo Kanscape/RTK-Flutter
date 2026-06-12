@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rena_rtk/rena_rtk.dart';
@@ -79,6 +81,15 @@ void main() {
       );
 
       expect(config.runtimePlatform, 'android');
+    });
+
+    test('does not expose legacy platform configuration', () {
+      final source = File('lib/src/rtk_config.dart').readAsStringSync();
+
+      expect(source, isNot(contains('this.platform')));
+      expect(source, isNot(contains('final String? platform')));
+      expect(source, isNot(contains('effectiveRuntimePlatform')));
+      expect(source, isNot(contains('@Deprecated')));
     });
 
     test('rejects non-positive timing configuration', () {

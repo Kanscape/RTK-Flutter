@@ -60,7 +60,7 @@ await RTK.init(
 
 Create the Rena project with `sdk_family=flutter`. The SDK reports runtime platform through telemetry context, such as `android`, `iOS`, `macOS`, or `web`; it is not a project-level field.
 
-If `runtimePlatform` and `locale` are not provided, the SDK infers them from the Flutter runtime. The deprecated `platform` option is still accepted for existing integrations. `debug` follows Flutter debug mode by default.
+If `runtimePlatform` and `locale` are not provided, the SDK infers them from the Flutter runtime. `debug` follows Flutter debug mode by default.
 
 ## Track Events
 

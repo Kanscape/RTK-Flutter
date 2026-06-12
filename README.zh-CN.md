@@ -61,7 +61,7 @@ await RTK.init(
 
 Rena project 创建时应使用 `sdk_family=flutter`。SDK 通过 telemetry context 上报运行环境 platform，比如 `android`、`iOS`、`macOS` 或 `web`；它不是 project-level 字段。
 
-`runtimePlatform` 和 `locale` 未传时，由 Flutter 运行环境推断。旧的 `platform` option 仍兼容已有接入。`debug` 默认跟随 Flutter debug mode。
+`runtimePlatform` 和 `locale` 未传时，由 Flutter 运行环境推断。`debug` 默认跟随 Flutter debug mode。
 
 ## 事件
 
