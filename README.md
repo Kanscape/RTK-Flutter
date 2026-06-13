@@ -49,14 +49,14 @@ await RTK.init(
   RTKConfig(
     endpoint: Uri.parse('https://rena.example.com'),
     publicWriteKey: 'public_xxx',
-    environment: 'production',
+    environment: 'app_store',
     appVersion: '1.0.0',
     buildNumber: '100',
   ),
 );
 ```
 
-`publicWriteKey` is the project public write key created from RTC Web or the Rena management API. The SDK does not send `project_id` to `/v1/batch`.
+`publicWriteKey` is the project public write key created from RTC Web or the Rena management API. `environment` must match an environment name created for that Rena project. The SDK does not send `project_id` to `/v1/batch`.
 
 Create the Rena project with `sdk_family=flutter`. The SDK reports runtime platform through telemetry context, such as `android`, `iOS`, `macOS`, or `web`; it is not a project-level field.
 
@@ -119,7 +119,7 @@ await RTK.init(
   RTKConfig(
     endpoint: Uri.parse('https://rena.example.com'),
     publicWriteKey: 'public_xxx',
-    environment: 'production',
+    environment: 'app_store',
     beforeSend: (item) {
       final json = item.toJson();
       if (json['name'] == 'debug_only') {

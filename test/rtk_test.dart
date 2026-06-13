@@ -10,7 +10,7 @@ void main() {
   RTKConfig config() => RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'production',
+        environment: 'app_store',
         debug: false,
       );
 

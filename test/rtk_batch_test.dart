@@ -56,7 +56,7 @@ void main() {
       final batch = RTKBatch(
         context: const RTKContext(
           platform: 'ios',
-          environment: 'production',
+          environment: 'app_store',
           appVersion: '1.0.0',
           buildNumber: '100',
         ),
@@ -75,7 +75,7 @@ void main() {
       expect(json, {
         'context': {
           'platform': 'ios',
-          'environment': 'production',
+          'environment': 'app_store',
           'app_version': '1.0.0',
           'build_number': '100',
         },

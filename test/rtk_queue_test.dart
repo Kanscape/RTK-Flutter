@@ -11,7 +11,7 @@ void main() {
     );
   }
 
-  const context = RTKContext(environment: 'production');
+  const context = RTKContext(environment: 'app_store');
 
   group('RTKQueue', () {
     test('enqueues items in order', () {

@@ -7,7 +7,7 @@ void main() {
   RTKConfig config({int maxBreadcrumbs = 50}) => RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'production',
+        environment: 'app_store',
         maxBreadcrumbs: maxBreadcrumbs,
         debug: false,
       );
@@ -19,7 +19,7 @@ void main() {
         config: RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           debug: false,
           beforeSend: (item) => null,
         ),
@@ -39,7 +39,7 @@ void main() {
         config: RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           debug: false,
           beforeSend: (item) => RTKEvent(
             name: 'replacement',
@@ -53,7 +53,7 @@ void main() {
       client.track('feature_used');
 
       final batch = queue.takeBatch(
-        context: const RTKContext(environment: 'production'),
+        context: const RTKContext(environment: 'app_store'),
         maxItems: 100,
         maxBytes: 256 * 1024,
       );
@@ -73,7 +73,7 @@ void main() {
       client.track('feature_used', properties: {'feature': 'search'});
 
       final batch = queue.takeBatch(
-        context: const RTKContext(environment: 'production'),
+        context: const RTKContext(environment: 'app_store'),
         maxItems: 100,
         maxBytes: 256 * 1024,
       );
@@ -100,7 +100,7 @@ void main() {
       );
 
       final batch = queue.takeBatch(
-        context: const RTKContext(environment: 'production'),
+        context: const RTKContext(environment: 'app_store'),
         maxItems: 100,
         maxBytes: 256 * 1024,
       );
@@ -135,7 +135,7 @@ void main() {
       client.captureError(StateError('failed'));
 
       final batch = queue.takeBatch(
-        context: const RTKContext(environment: 'production'),
+        context: const RTKContext(environment: 'app_store'),
         maxItems: 100,
         maxBytes: 256 * 1024,
       );

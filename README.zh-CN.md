@@ -50,14 +50,14 @@ await RTK.init(
   RTKConfig(
     endpoint: Uri.parse('https://rena.example.com'),
     publicWriteKey: 'public_xxx',
-    environment: 'production',
+    environment: 'app_store',
     appVersion: '1.0.0',
     buildNumber: '100',
   ),
 );
 ```
 
-`publicWriteKey` 是通过 RTC Web 或 Rena management API 创建的 project public write key。SDK 不向 `/v1/batch` 发送 `project_id`。
+`publicWriteKey` 是通过 RTC Web 或 Rena management API 创建的 project public write key。`environment` 必须使用该 Rena project 下已创建的环境名。SDK 不向 `/v1/batch` 发送 `project_id`。
 
 Rena project 创建时应使用 `sdk_family=flutter`。SDK 通过 telemetry context 上报运行环境 platform，比如 `android`、`iOS`、`macOS` 或 `web`；它不是 project-level 字段。
 
@@ -120,7 +120,7 @@ await RTK.init(
   RTKConfig(
     endpoint: Uri.parse('https://rena.example.com'),
     publicWriteKey: 'public_xxx',
-    environment: 'production',
+    environment: 'app_store',
     beforeSend: (item) {
       final json = item.toJson();
       if (json['name'] == 'debug_only') {

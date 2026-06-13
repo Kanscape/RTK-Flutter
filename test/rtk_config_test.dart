@@ -10,7 +10,7 @@ void main() {
       final config = RTKConfig(
         endpoint: Uri.parse('https://rena.example.com/base/'),
         publicWriteKey: 'public_test',
-        environment: 'production',
+        environment: 'app_store',
       );
 
       expect(config.endpoint.toString(), 'https://rena.example.com/base');
@@ -25,7 +25,7 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: '  ',
-          environment: 'production',
+          environment: 'app_store',
         ),
         throwsArgumentError,
       );
@@ -46,7 +46,7 @@ void main() {
       final config = RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'production',
+        environment: 'app_store',
       );
 
       expect(config.enabled, isTrue);
@@ -65,7 +65,7 @@ void main() {
       final config = RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'production',
+        environment: 'app_store',
         debug: false,
       );
 
@@ -76,7 +76,7 @@ void main() {
       final config = RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'production',
+        environment: 'app_store',
         runtimePlatform: 'android',
       );
 
@@ -97,7 +97,7 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           flushInterval: Duration.zero,
         ),
         throwsArgumentError,
@@ -107,7 +107,7 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           requestTimeout: Duration.zero,
         ),
         throwsArgumentError,
@@ -117,7 +117,7 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           minRetryDelay: Duration.zero,
         ),
         throwsArgumentError,
@@ -127,7 +127,7 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           minRetryDelay: const Duration(seconds: 10),
           maxRetryDelay: const Duration(seconds: 1),
         ),

@@ -11,11 +11,11 @@ void main() {
   RTKConfig config() => RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'production',
+        environment: 'app_store',
       );
 
   RTKBatch batch() => RTKBatch(
-        context: const RTKContext(environment: 'production'),
+        context: const RTKContext(environment: 'app_store'),
         anonymousId: 'anon_123',
         sessionId: 'sess_123',
         items: [

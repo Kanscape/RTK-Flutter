@@ -15,7 +15,7 @@ void main() {
   RTKConfig config() => RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'production',
+        environment: 'app_store',
         appVersion: '1.0.0',
         buildNumber: '100',
         runtimePlatform: 'ios',
@@ -51,7 +51,7 @@ void main() {
         expect(client.pendingCount, 0);
         expect(body?['context'], {
           'platform': 'ios',
-          'environment': 'production',
+          'environment': 'app_store',
           'app_version': '1.0.0',
           'build_number': '100',
           'locale':
@@ -71,7 +71,7 @@ void main() {
         config: RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           debug: false,
         ),
         clock: FakeRTKClock(DateTime.utc(2026, 6, 10, 12)),
@@ -112,8 +112,8 @@ void main() {
       final client = RenaRTK(
         config: RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
-          publicWriteKey: 'public_secret_1234567890',
-          environment: 'production',
+          publicWriteKey: 'write_key_for_redaction_1234567890',
+          environment: 'app_store',
           debug: true,
           flushInterval: const Duration(hours: 1),
         ),
@@ -139,7 +139,7 @@ void main() {
         output,
         contains('dropped_property path=dropped reason=unsupported_value'),
       );
-      expect(output, isNot(contains('public_secret_1234567890')));
+      expect(output, isNot(contains('write_key_for_redaction_1234567890')));
       final item = (body!['items']! as List<Object?>).single! as Map;
       expect(item['properties'], {'kept': 'yes'});
 
@@ -172,7 +172,7 @@ void main() {
         config: RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           debug: false,
           flushAt: 100,
           flushInterval: const Duration(hours: 1),
@@ -188,7 +188,7 @@ void main() {
         config: RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           debug: false,
           flushAt: 100,
           flushInterval: const Duration(hours: 1),
@@ -210,7 +210,7 @@ void main() {
         config: RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           debug: false,
           flushAt: 2,
           flushInterval: const Duration(hours: 1),
@@ -252,7 +252,7 @@ void main() {
         config: RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           debug: false,
           flushInterval: const Duration(hours: 1),
         ),
@@ -290,7 +290,7 @@ void main() {
         config: RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'production',
+          environment: 'app_store',
           debug: false,
           flushAt: 100,
           flushInterval: const Duration(milliseconds: 10),
