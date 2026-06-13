@@ -98,6 +98,118 @@ void main() {
       client.dispose();
     });
 
+    test('fills OS context from device info when config omits it', () async {
+      Map<String, Object?>? body;
+      final client = RenaRTK(
+        config: RTKConfig(
+          endpoint: Uri.parse('https://rena.example.com'),
+          publicWriteKey: 'public_test',
+          environment: 'app_store',
+          runtimePlatform: 'ios',
+          debug: false,
+        ),
+        clock: FakeRTKClock(DateTime.utc(2026, 6, 10, 12)),
+        deviceInfoProvider: const FakeDeviceInfoProvider(
+          osName: 'iOS',
+          osVersion: '26.0',
+          deviceModel: 'iPhone17,2',
+        ),
+        httpClient: MockClient((request) async {
+          body = jsonDecode(request.body) as Map<String, Object?>;
+          return http.Response(
+            jsonEncode({'accepted': 1, 'rejected': 0, 'rejections': []}),
+            200,
+          );
+        }),
+      );
+      await client.start();
+
+      client.track('feature_used');
+      await client.flush();
+
+      expect(body?['context'], containsPair('os_name', 'iOS'));
+      expect(body?['context'], containsPair('os_version', '26.0'));
+      expect(body?['context'], containsPair('device_model', 'iPhone17,2'));
+
+      client.dispose();
+    });
+
+    test('manual OS context overrides device info', () async {
+      Map<String, Object?>? body;
+      final provider = CountingDeviceInfoProvider(
+        resolved: const RTKResolvedDeviceInfo(
+          osName: 'iOS',
+          osVersion: '26.0',
+          deviceModel: 'iPhone17,2',
+        ),
+      );
+      final client = RenaRTK(
+        config: RTKConfig(
+          endpoint: Uri.parse('https://rena.example.com'),
+          publicWriteKey: 'public_test',
+          environment: 'app_store',
+          runtimePlatform: 'ios',
+          osName: 'ManualOS',
+          osVersion: '1.2.3',
+          deviceModel: 'ManualDevice',
+          debug: false,
+        ),
+        clock: FakeRTKClock(DateTime.utc(2026, 6, 10, 12)),
+        deviceInfoProvider: provider,
+        httpClient: MockClient((request) async {
+          body = jsonDecode(request.body) as Map<String, Object?>;
+          return http.Response(
+            jsonEncode({'accepted': 1, 'rejected': 0, 'rejections': []}),
+            200,
+          );
+        }),
+      );
+      await client.start();
+
+      client.track('feature_used');
+      await client.flush();
+
+      expect(body?['context'], containsPair('os_name', 'ManualOS'));
+      expect(body?['context'], containsPair('os_version', '1.2.3'));
+      expect(body?['context'], containsPair('device_model', 'ManualDevice'));
+      expect(provider.resolveCount, 0);
+
+      client.dispose();
+    });
+
+    test('continues when device info provider fails', () async {
+      Map<String, Object?>? body;
+      final client = RenaRTK(
+        config: RTKConfig(
+          endpoint: Uri.parse('https://rena.example.com'),
+          publicWriteKey: 'public_test',
+          environment: 'app_store',
+          runtimePlatform: 'ios',
+          debug: false,
+        ),
+        clock: FakeRTKClock(DateTime.utc(2026, 6, 10, 12)),
+        deviceInfoProvider: const ThrowingDeviceInfoProvider(),
+        httpClient: MockClient((request) async {
+          body = jsonDecode(request.body) as Map<String, Object?>;
+          return http.Response(
+            jsonEncode({'accepted': 1, 'rejected': 0, 'rejections': []}),
+            200,
+          );
+        }),
+      );
+      await client.start();
+
+      client.track('feature_used');
+      await client.flush();
+
+      final context = body!['context']! as Map<String, Object?>;
+      expect(context.containsKey('os_name'), isFalse);
+      expect(context.containsKey('os_version'), isFalse);
+      expect(context.containsKey('device_model'), isFalse);
+
+      client.dispose();
+    });
+
     test('debug logging reports unsupported property drops', () async {
       final originalDebugPrint = debugPrint;
       final messages = <String>[];
@@ -216,6 +328,7 @@ void main() {
           flushInterval: const Duration(hours: 1),
         ),
         clock: FakeRTKClock(DateTime.utc(2026, 6, 10, 12)),
+        deviceInfoProvider: const FakeDeviceInfoProvider(),
         httpClient: MockClient((request) async {
           requestCount += 1;
           if (!requestStarted.isCompleted) {
@@ -284,7 +397,7 @@ void main() {
       client.dispose();
     });
 
-    testWidgets('flushInterval sends queued telemetry', (tester) async {
+    test('flushInterval sends queued telemetry', () async {
       var requestCount = 0;
       final client = RenaRTK(
         config: RTKConfig(
@@ -307,8 +420,7 @@ void main() {
       await client.start();
 
       client.track('feature_used');
-      await tester.pump(const Duration(milliseconds: 20));
-      await tester.pump();
+      await waitForCondition(() => requestCount == 1);
 
       expect(requestCount, 1);
       expect(client.pendingCount, 0);
@@ -370,4 +482,54 @@ void main() {
       expect(restored.pendingCount, 0);
     });
   });
+}
+
+class FakeDeviceInfoProvider implements RTKDeviceInfoProvider {
+  const FakeDeviceInfoProvider({
+    this.osName,
+    this.osVersion,
+    this.deviceModel,
+  });
+
+  final String? osName;
+  final String? osVersion;
+  final String? deviceModel;
+
+  @override
+  Future<RTKResolvedDeviceInfo> resolve({required String platform}) async {
+    return RTKResolvedDeviceInfo(
+      osName: osName,
+      osVersion: osVersion,
+      deviceModel: deviceModel,
+    );
+  }
+}
+
+class ThrowingDeviceInfoProvider implements RTKDeviceInfoProvider {
+  const ThrowingDeviceInfoProvider();
+
+  @override
+  Future<RTKResolvedDeviceInfo> resolve({required String platform}) async {
+    throw StateError('device info unavailable');
+  }
+}
+
+class CountingDeviceInfoProvider implements RTKDeviceInfoProvider {
+  CountingDeviceInfoProvider({required this.resolved});
+
+  final RTKResolvedDeviceInfo resolved;
+  int resolveCount = 0;
+
+  @override
+  Future<RTKResolvedDeviceInfo> resolve({required String platform}) async {
+    resolveCount += 1;
+    return resolved;
+  }
+}
+
+Future<void> waitForCondition(bool Function() condition) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 1));
+  while (!condition() && DateTime.now().isBefore(deadline)) {
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
 }

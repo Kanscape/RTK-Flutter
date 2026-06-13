@@ -9,6 +9,7 @@ import 'rtk_breadcrumb.dart';
 import 'rtk_clock.dart';
 import 'rtk_config.dart';
 import 'rtk_context.dart';
+import 'rtk_device_info.dart';
 import 'rtk_error.dart';
 import 'rtk_event.dart';
 import 'rtk_ids.dart';
@@ -27,6 +28,7 @@ class RenaRTK {
     this.clock = const RTKClock(),
     RTKIdGenerator? idGenerator,
     http.Client? httpClient,
+    RTKDeviceInfoProvider? deviceInfoProvider,
   })  : _queue = queue ?? RTKQueue(maxQueueSize: config.maxQueueSize),
         _idGenerator = idGenerator ?? RTKIdGenerator(),
         _transport = RTKHttpTransport(config: config, client: httpClient),
@@ -35,7 +37,9 @@ class RenaRTK {
           minDelay: config.minRetryDelay,
           maxDelay: config.maxRetryDelay,
         ),
-        _logger = RTKLogger(enabled: config.debug);
+        _logger = RTKLogger(enabled: config.debug),
+        _deviceInfoProvider =
+            deviceInfoProvider ?? RTKDefaultDeviceInfoProvider();
 
   final RTKConfig config;
   final RTKClock clock;
@@ -44,12 +48,14 @@ class RenaRTK {
   final RTKHttpTransport _transport;
   final RTKRetryPolicy _retryPolicy;
   final RTKLogger _logger;
+  final RTKDeviceInfoProvider _deviceInfoProvider;
   final Map<String, Object?> _superProperties = {};
   final List<RTKBreadcrumb> _breadcrumbs = [];
 
   bool _isStarted = false;
   bool _isOptedOut = false;
   String? _anonymousId;
+  RTKResolvedDeviceInfo _deviceInfo = const RTKResolvedDeviceInfo();
   late final RTKSession _session = RTKSession(
     clock: clock,
     idGenerator: _idGenerator,
@@ -74,6 +80,7 @@ class RenaRTK {
     _storage = await RTKStorage.create(idGenerator: _idGenerator);
     _isOptedOut = await _storage!.isOptedOut();
     _anonymousId = await _storage!.anonymousId();
+    _deviceInfo = await _resolveDeviceInfo();
     if (!_isOptedOut) {
       final pendingBeforeStart = _queue.items;
       _queue.restore([...await _storage!.loadQueue(), ...pendingBeforeStart]);
@@ -279,11 +286,26 @@ class RenaRTK {
         environment: config.environment,
         appVersion: config.appVersion,
         buildNumber: config.buildNumber,
-        osName: config.osName,
-        osVersion: config.osVersion,
-        deviceModel: config.deviceModel,
+        osName: config.osName ?? _deviceInfo.osName,
+        osVersion: config.osVersion ?? _deviceInfo.osVersion,
+        deviceModel: config.deviceModel ?? _deviceInfo.deviceModel,
         locale: config.locale ?? _defaultLocale,
       );
+
+  Future<RTKResolvedDeviceInfo> _resolveDeviceInfo() async {
+    if (config.osName != null &&
+        config.osVersion != null &&
+        config.deviceModel != null) {
+      return const RTKResolvedDeviceInfo();
+    }
+    try {
+      return await _deviceInfoProvider.resolve(
+        platform: config.runtimePlatform ?? _defaultPlatform,
+      );
+    } catch (_) {
+      return const RTKResolvedDeviceInfo();
+    }
+  }
 
   String get _defaultPlatform {
     if (kIsWeb) {

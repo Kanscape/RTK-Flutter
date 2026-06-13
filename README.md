@@ -16,6 +16,7 @@ The SDK collects only telemetry submitted through its public API. It does not in
 - Super properties shared across events and errors.
 - Batched delivery to `POST /v1/batch`.
 - Automatic flush based on `flushAt`, `flushInterval`, and app lifecycle.
+- Automatic runtime context for platform, locale, OS version, and device model when available.
 - Persistent anonymous ID, session ID, opt-out state, and pending queue.
 - Retry with exponential backoff for rate limits, server failures, timeouts, and network errors.
 - Client-side enforcement for Rena ingest limits.
@@ -60,7 +61,7 @@ await RTK.init(
 
 Create the Rena project with `sdk_family=flutter`. The SDK reports runtime platform through telemetry context, such as `android`, `iOS`, `macOS`, or `web`; it is not a project-level field.
 
-If `runtimePlatform` and `locale` are not provided, the SDK infers them from the Flutter runtime. `debug` follows Flutter debug mode by default.
+If `runtimePlatform` and `locale` are not provided, the SDK infers them from the Flutter runtime. If `osName`, `osVersion`, or `deviceModel` are not provided, the SDK attempts to infer them through `device_info_plus`. Unavailable fields are omitted, and manually provided values take priority. `debug` follows Flutter debug mode by default.
 
 ## Track Events
 
@@ -159,6 +160,8 @@ By default, the SDK does not automatically collect:
 - User IDs.
 - HTTP request bodies.
 - Screenshots.
+
+The SDK can automatically include runtime platform, locale, OS name, OS version, and device model in telemetry context.
 
 ## Rena Ingest Limits
 
