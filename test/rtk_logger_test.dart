@@ -20,7 +20,7 @@ void main() {
     });
 
     test('redacts public write key in debug output', () {
-      const writeKey = 'public_secret_1234567890';
+      const writeKey = 'write_key_for_redaction_1234567890';
       final logger = RTKLogger(enabled: true);
 
       logger.initialized(
@@ -29,7 +29,7 @@ void main() {
       );
 
       final output = messages.join('\n');
-      expect(output, contains('public...7890'));
+      expect(output, contains('write_...7890'));
       expect(output, isNot(contains(writeKey)));
     });
 
