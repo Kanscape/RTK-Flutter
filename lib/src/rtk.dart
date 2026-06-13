@@ -56,10 +56,6 @@ class RenaRTK {
   bool _isOptedOut = false;
   String? _anonymousId;
   RTKResolvedDeviceInfo _deviceInfo = const RTKResolvedDeviceInfo();
-  late final RTKSession _session = RTKSession(
-    clock: clock,
-    idGenerator: _idGenerator,
-  );
   RTKStorage? _storage;
   RTKLifecycleBinding? _lifecycleBinding;
   Timer? _flushTimer;
@@ -95,8 +91,17 @@ class RenaRTK {
     await _persistQueue();
     _startFlushTimer();
     _lifecycleBinding ??= RTKLifecycleBinding(
-      RTKLifecycleController(session: _session, onFlush: flush),
+      RTKLifecycleController(onFlush: flush),
     );
+    if (config.enabled && !_isOptedOut) {
+      _enqueue(
+        RTKEvent(
+          name: 'app_launch',
+          timestamp: clock.now(),
+          properties: _prepareProperties(null),
+        ),
+      );
+    }
     if (_queue.length >= config.flushAt) {
       _scheduleFlush('flushAt');
     }
@@ -238,7 +243,6 @@ class RenaRTK {
       maxItems: 100,
       maxBytes: 256 * 1024,
       anonymousId: _anonymousId,
-      sessionId: _session.currentId,
       now: clock.now(),
     );
     if (_queue.droppedCount > droppedBeforeSelection) {
@@ -253,7 +257,6 @@ class RenaRTK {
       RTKBatch(
         context: _context,
         anonymousId: _anonymousId,
-        sessionId: _session.currentId,
         items: selection.items.map((item) => item.item).toList(),
       ),
     );

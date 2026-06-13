@@ -1,7 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rena_rtk/src/rtk_clock.dart';
-import 'package:rena_rtk/src/rtk_ids.dart';
 import 'package:rena_rtk/src/rtk_lifecycle.dart';
 
 void main() {
@@ -9,7 +7,6 @@ void main() {
     test('paused and detached trigger flush callback', () async {
       var flushCount = 0;
       final controller = RTKLifecycleController(
-        session: RTKSession(),
         onFlush: () async {
           flushCount += 1;
         },
@@ -24,7 +21,6 @@ void main() {
     test('resumed triggers flush callback', () async {
       var flushCount = 0;
       final controller = RTKLifecycleController(
-        session: RTKSession(),
         onFlush: () async {
           flushCount += 1;
         },
@@ -35,23 +31,18 @@ void main() {
       expect(flushCount, 1);
     });
 
-    test('resumed after timeout renews session', () async {
-      final clock = FakeRTKClock(DateTime.utc(2026, 6, 10, 12));
-      final session = RTKSession(
-        clock: clock,
-        idGenerator: RTKIdGenerator(seed: 1),
-      );
-      final firstId = session.currentId;
+    test('state changes do not create identity side effects', () async {
+      var flushCount = 0;
       final controller = RTKLifecycleController(
-        session: session,
-        onFlush: () async {},
+        onFlush: () async {
+          flushCount += 1;
+        },
       );
 
       await controller.handleState(AppLifecycleState.paused);
-      clock.nowValue = DateTime.utc(2026, 6, 10, 12, 31);
       await controller.handleState(AppLifecycleState.resumed);
 
-      expect(session.currentId, isNot(firstId));
+      expect(flushCount, 2);
     });
   });
 }

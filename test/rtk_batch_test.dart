@@ -61,7 +61,6 @@ void main() {
           buildNumber: '100',
         ),
         anonymousId: 'anon_123',
-        sessionId: 'sess_123',
         items: [
           RTKEvent(
             name: 'feature_used',
@@ -80,7 +79,6 @@ void main() {
           'build_number': '100',
         },
         'anonymous_id': 'anon_123',
-        'session_id': 'sess_123',
         'items': [
           {
             'type': 'event',
@@ -91,6 +89,7 @@ void main() {
         ],
       });
       expect(json.containsKey('project_id'), isFalse);
+      expect(json.containsKey('session_id'), isFalse);
     });
 
     test('rejects client-side item limit violations', () {

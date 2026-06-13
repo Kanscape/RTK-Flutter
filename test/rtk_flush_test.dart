@@ -58,9 +58,12 @@ void main() {
               WidgetsBinding.instance.platformDispatcher.locale.toLanguageTag(),
         });
         expect(body?['anonymous_id'], startsWith('anon_'));
-        expect(body?['session_id'], startsWith('sess_'));
-        expect(body?['items'], hasLength(1));
-        expect((body?['items']! as List).single['name'], 'feature_used');
+        expect(body?.containsKey('session_id'), isFalse);
+        expect(body?['items'], hasLength(2));
+        expect((body?['items']! as List).map((item) => item['name']), [
+          'app_launch',
+          'feature_used',
+        ]);
         expect(body?.containsKey('project_id'), isFalse);
       },
     );
@@ -252,7 +255,9 @@ void main() {
         contains('dropped_property path=dropped reason=unsupported_value'),
       );
       expect(output, isNot(contains('write_key_for_redaction_1234567890')));
-      final item = (body!['items']! as List<Object?>).single! as Map;
+      final item = (body!['items']! as List<Object?>)
+          .cast<Map>()
+          .singleWhere((item) => item['name'] == 'feature_used');
       expect(item['properties'], {'kept': 'yes'});
 
       client.dispose();
@@ -276,7 +281,10 @@ void main() {
       await client.flush();
 
       expect(client.pendingCount, 0);
-      expect((body?['items']! as List).single['name'], 'feature_used');
+      expect((body?['items']! as List).map((item) => item['name']), [
+        'feature_used',
+        'app_launch',
+      ]);
     });
 
     test('persists queued telemetry before any flush', () async {
@@ -308,7 +316,7 @@ void main() {
       );
       await restored.start();
 
-      expect(restored.pendingCount, 1);
+      expect(restored.pendingCount, 3);
 
       client.dispose();
       restored.dispose();
@@ -324,7 +332,7 @@ void main() {
           publicWriteKey: 'public_test',
           environment: 'app_store',
           debug: false,
-          flushAt: 2,
+          flushAt: 3,
           flushInterval: const Duration(hours: 1),
         ),
         clock: FakeRTKClock(DateTime.utc(2026, 6, 10, 12)),
@@ -336,7 +344,7 @@ void main() {
           }
           await responseGate.future;
           return http.Response(
-            jsonEncode({'accepted': 2, 'rejected': 0, 'rejections': []}),
+            jsonEncode({'accepted': 3, 'rejected': 0, 'rejections': []}),
             200,
           );
         }),
@@ -441,7 +449,7 @@ void main() {
       client.track('feature_used');
       await client.flush();
 
-      expect(client.pendingCount, 1);
+      expect(client.pendingCount, 2);
     });
 
     test('drops non-retryable failures', () async {

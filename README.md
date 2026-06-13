@@ -17,7 +17,7 @@ The SDK collects only telemetry submitted through its public API. It does not in
 - Batched delivery to `POST /v1/batch`.
 - Automatic flush based on `flushAt`, `flushInterval`, and app lifecycle.
 - Automatic runtime context for platform, locale, OS version, and device model when available.
-- Persistent anonymous ID, session ID, opt-out state, and pending queue.
+- Persistent anonymous ID, opt-out state, and pending queue.
 - Retry with exponential backoff for rate limits, server failures, timeouts, and network errors.
 - Client-side enforcement for Rena ingest limits.
 - `beforeSend` hook for replacing or dropping telemetry before it is queued.

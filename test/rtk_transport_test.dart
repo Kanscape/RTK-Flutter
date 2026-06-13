@@ -17,7 +17,6 @@ void main() {
   RTKBatch batch() => RTKBatch(
         context: const RTKContext(environment: 'app_store'),
         anonymousId: 'anon_123',
-        sessionId: 'sess_123',
         items: [
           RTKEvent(
               name: 'feature_used', timestamp: DateTime.utc(2026, 6, 10, 12)),

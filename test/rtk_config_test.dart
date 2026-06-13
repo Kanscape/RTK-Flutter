@@ -83,7 +83,7 @@ void main() {
       expect(config.runtimePlatform, 'android');
     });
 
-    test('does not expose legacy platform configuration', () {
+    test('does not expose old platform configuration', () {
       final source = File('lib/src/rtk_config.dart').readAsStringSync();
 
       expect(source, isNot(contains('this.platform')));

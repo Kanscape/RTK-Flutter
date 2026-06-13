@@ -52,7 +52,6 @@ class RTKQueue {
     required int maxItems,
     required int maxBytes,
     String? anonymousId,
-    String? sessionId,
     DateTime? now,
   }) {
     final effectiveNow = now ?? DateTime.now().toUtc();
@@ -60,7 +59,6 @@ class RTKQueue {
     var encodedBytes = _encodedBytes(
       context: context,
       anonymousId: anonymousId,
-      sessionId: sessionId,
       items: selected,
     );
 
@@ -77,7 +75,6 @@ class RTKQueue {
       final candidateBytes = _encodedBytes(
         context: context,
         anonymousId: anonymousId,
-        sessionId: sessionId,
         items: candidate,
       );
 
@@ -123,12 +120,10 @@ class RTKQueue {
     required RTKContext context,
     required List<RTKQueuedItem> items,
     String? anonymousId,
-    String? sessionId,
   }) {
     final batch = RTKBatch(
       context: context,
       anonymousId: anonymousId,
-      sessionId: sessionId,
       items: items.map((item) => item.item).toList(),
     );
     return utf8.encode(jsonEncode(batch.toJson())).length;
