@@ -1,3 +1,9 @@
+## 0.2.0
+
+- Remove environment configuration and environment context from SDK batches.
+- Keep endpoint and public write key as application-supplied configuration.
+- Document that the project is selected by the Rena public write key.
+
 ## 0.1.0
 
 - Initial Flutter package for Rena Telemetry Kit.

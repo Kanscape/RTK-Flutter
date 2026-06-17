@@ -10,7 +10,6 @@ void main() {
       final config = RTKConfig(
         endpoint: Uri.parse('https://rena.example.com/base/'),
         publicWriteKey: 'public_test',
-        environment: 'app_store',
       );
 
       expect(config.endpoint.toString(), 'https://rena.example.com/base');
@@ -25,28 +24,23 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: '  ',
-          environment: 'app_store',
         ),
         throwsArgumentError,
       );
     });
 
-    test('rejects empty environment', () {
-      expect(
-        () => RTKConfig(
-          endpoint: Uri.parse('https://rena.example.com'),
-          publicWriteKey: 'public_test',
-          environment: '',
-        ),
-        throwsArgumentError,
-      );
+    test('does not expose environment configuration', () {
+      final source = File('lib/src/rtk_config.dart').readAsStringSync();
+
+      expect(source, isNot(contains('required String environment')));
+      expect(source, isNot(contains('final String environment')));
+      expect(source, isNot(contains('this.environment')));
     });
 
     test('uses SDK defaults from the design document', () {
       final config = RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'app_store',
       );
 
       expect(config.enabled, isTrue);
@@ -65,7 +59,6 @@ void main() {
       final config = RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'app_store',
         debug: false,
       );
 
@@ -76,7 +69,6 @@ void main() {
       final config = RTKConfig(
         endpoint: Uri.parse('https://rena.example.com'),
         publicWriteKey: 'public_test',
-        environment: 'app_store',
         runtimePlatform: 'android',
       );
 
@@ -97,7 +89,6 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'app_store',
           flushInterval: Duration.zero,
         ),
         throwsArgumentError,
@@ -107,7 +98,6 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'app_store',
           requestTimeout: Duration.zero,
         ),
         throwsArgumentError,
@@ -117,7 +107,6 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'app_store',
           minRetryDelay: Duration.zero,
         ),
         throwsArgumentError,
@@ -127,7 +116,6 @@ void main() {
         () => RTKConfig(
           endpoint: Uri.parse('https://rena.example.com'),
           publicWriteKey: 'public_test',
-          environment: 'app_store',
           minRetryDelay: const Duration(seconds: 10),
           maxRetryDelay: const Duration(seconds: 1),
         ),

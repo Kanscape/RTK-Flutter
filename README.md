@@ -38,7 +38,7 @@ dependencies:
   rena_rtk:
     git:
       url: https://github.com/Kanscape/RTK-Flutter.git
-      ref: v0.1.0
+      ref: v0.2.0
 ```
 
 ## Initialize
@@ -48,16 +48,17 @@ import 'package:rena_rtk/rena_rtk.dart';
 
 await RTK.init(
   RTKConfig(
-    endpoint: Uri.parse('https://rena.example.com'),
-    publicWriteKey: 'public_xxx',
-    environment: 'app_store',
+    endpoint: Uri.parse(const String.fromEnvironment('RENA_ENDPOINT')),
+    publicWriteKey: const String.fromEnvironment('RENA_PUBLIC_WRITE_KEY'),
     appVersion: '1.0.0',
     buildNumber: '100',
   ),
 );
 ```
 
-`publicWriteKey` is the project public write key created from RTC Web or the Rena management API. `environment` must match an environment name created for that Rena project. The SDK does not send `project_id` to `/v1/batch`.
+`endpoint` and `publicWriteKey` should come from the app's own configuration, for example `--dart-define` values or a release config file. The SDK does not hardcode a Rena host.
+
+`publicWriteKey` is the project public write key created with the Rena Admin CLI inside the `rena-api` container. The key identifies the target project, so the SDK does not send `project_id` to `/v1/batch`.
 
 Create the Rena project with `sdk_family=flutter`. The SDK reports runtime platform through telemetry context, such as `android`, `iOS`, `macOS`, or `web`; it is not a project-level field.
 
@@ -118,9 +119,8 @@ The SDK starts a flush when the queue reaches `flushAt`, when `flushInterval` el
 ```dart
 await RTK.init(
   RTKConfig(
-    endpoint: Uri.parse('https://rena.example.com'),
-    publicWriteKey: 'public_xxx',
-    environment: 'app_store',
+    endpoint: Uri.parse(const String.fromEnvironment('RENA_ENDPOINT')),
+    publicWriteKey: const String.fromEnvironment('RENA_PUBLIC_WRITE_KEY'),
     beforeSend: (item) {
       final json = item.toJson();
       if (json['name'] == 'debug_only') {

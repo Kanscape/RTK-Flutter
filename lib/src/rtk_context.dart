@@ -1,7 +1,6 @@
 class RTKContext {
   const RTKContext({
     this.platform,
-    this.environment,
     this.appVersion,
     this.buildNumber,
     this.osName,
@@ -11,7 +10,6 @@ class RTKContext {
   });
 
   final String? platform;
-  final String? environment;
   final String? appVersion;
   final String? buildNumber;
   final String? osName;
@@ -22,7 +20,6 @@ class RTKContext {
   Map<String, Object?> toJson() {
     return {
       if (platform != null) 'platform': platform,
-      if (environment != null) 'environment': environment,
       if (appVersion != null) 'app_version': appVersion,
       if (buildNumber != null) 'build_number': buildNumber,
       if (osName != null) 'os_name': osName,

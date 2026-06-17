@@ -8,7 +8,6 @@ class RTKConfig {
   RTKConfig({
     required Uri endpoint,
     required String publicWriteKey,
-    required String environment,
     this.appVersion,
     this.buildNumber,
     this.runtimePlatform,
@@ -28,8 +27,7 @@ class RTKConfig {
     this.maxRetryDelay = const Duration(seconds: 60),
     this.beforeSend,
   })  : endpoint = _normalizeEndpoint(endpoint),
-        publicWriteKey = publicWriteKey.trim(),
-        environment = environment.trim() {
+        publicWriteKey = publicWriteKey.trim() {
     if (this.endpoint.toString().isEmpty) {
       throw ArgumentError.value(endpoint, 'endpoint', 'must not be empty');
     }
@@ -37,13 +35,6 @@ class RTKConfig {
       throw ArgumentError.value(
         publicWriteKey,
         'publicWriteKey',
-        'must not be empty',
-      );
-    }
-    if (this.environment.isEmpty) {
-      throw ArgumentError.value(
-        environment,
-        'environment',
         'must not be empty',
       );
     }
@@ -86,7 +77,6 @@ class RTKConfig {
 
   final Uri endpoint;
   final String publicWriteKey;
-  final String environment;
   final String? appVersion;
   final String? buildNumber;
   final String? runtimePlatform;
