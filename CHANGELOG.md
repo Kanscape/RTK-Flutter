@@ -1,3 +1,8 @@
+## 0.3.0
+
+- Add automatic foreground duration tracking through `app_foreground_session` events.
+- Persist foreground session checkpoints locally and send the previous session on the next start or foreground resume.
+
 ## 0.2.0
 
 - Remove environment configuration and environment context from SDK batches.

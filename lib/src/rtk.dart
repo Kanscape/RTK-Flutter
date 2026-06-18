@@ -59,8 +59,10 @@ class RenaRTK {
   RTKStorage? _storage;
   RTKLifecycleBinding? _lifecycleBinding;
   Timer? _flushTimer;
+  Timer? _foregroundSessionTimer;
   Future<void> _pendingPersist = Future<void>.value();
   Future<void>? _activeFlush;
+  bool _foregroundSessionActive = false;
 
   bool get isStarted => _isStarted;
 
@@ -88,10 +90,15 @@ class RenaRTK {
       endpoint: config.endpoint,
       publicWriteKey: config.publicWriteKey,
     );
+    await _enterForeground();
     await _persistQueue();
     _startFlushTimer();
     _lifecycleBinding ??= RTKLifecycleBinding(
-      RTKLifecycleController(onFlush: flush),
+      RTKLifecycleController(
+        onFlush: flush,
+        onResume: _enterForeground,
+        onBackground: _leaveForeground,
+      ),
     );
     if (config.enabled && !_isOptedOut) {
       _enqueue(
@@ -199,11 +206,15 @@ class RenaRTK {
     if (value) {
       _flushTimer?.cancel();
       _flushTimer = null;
+      _foregroundSessionTimer?.cancel();
+      _foregroundSessionTimer = null;
+      _foregroundSessionActive = false;
       _queue.clear();
       _breadcrumbs.clear();
       await _persistQueue();
     } else {
       _startFlushTimer();
+      await _enterForeground();
     }
     _logger.optOutChanged(value);
   }
@@ -354,6 +365,108 @@ class RenaRTK {
     await _pendingPersist;
   }
 
+  Future<void> _enterForeground() async {
+    if (!_shouldTrackForegroundDuration) {
+      return;
+    }
+    if (_foregroundSessionActive) {
+      await _checkpointForegroundSession();
+      return;
+    }
+    await _enqueuePreviousForegroundSession();
+    await _startForegroundSession();
+  }
+
+  Future<void> _leaveForeground() async {
+    if (!_foregroundSessionActive) {
+      return;
+    }
+    await _checkpointForegroundSession();
+    _foregroundSessionActive = false;
+    _foregroundSessionTimer?.cancel();
+    _foregroundSessionTimer = null;
+  }
+
+  bool get _shouldTrackForegroundDuration {
+    return config.enabled &&
+        config.trackForegroundDuration &&
+        !_isOptedOut &&
+        _storage != null;
+  }
+
+  Future<void> _enqueuePreviousForegroundSession() async {
+    final storage = _storage;
+    if (storage == null) {
+      return;
+    }
+    final session = await storage.loadForegroundSession();
+    if (session == null) {
+      return;
+    }
+
+    final endedAt = _maxTime(session.startedAt, session.lastSeenAt);
+    _enqueue(
+      RTKEvent(
+        name: 'app_foreground_session',
+        timestamp: endedAt,
+        properties: {
+          'duration_ms': endedAt.difference(session.startedAt).inMilliseconds,
+          'started_at': rtkFormatTimestamp(session.startedAt),
+          'ended_at': rtkFormatTimestamp(endedAt),
+          'recovered': true,
+        },
+      ),
+    );
+    await _persistQueue();
+    await storage.clearForegroundSession();
+  }
+
+  Future<void> _startForegroundSession() async {
+    final storage = _storage;
+    if (storage == null) {
+      return;
+    }
+    final now = clock.now();
+    await storage.saveForegroundSession(
+      RTKForegroundSession(startedAt: now, lastSeenAt: now),
+    );
+    _foregroundSessionActive = true;
+    _startForegroundSessionTimer();
+  }
+
+  Future<void> _checkpointForegroundSession() async {
+    final storage = _storage;
+    if (storage == null || !_shouldTrackForegroundDuration) {
+      return;
+    }
+    final session = await storage.loadForegroundSession();
+    if (session == null) {
+      return;
+    }
+    final now = clock.now();
+    final lastSeenAt = _maxTime(session.lastSeenAt, now);
+    await storage.saveForegroundSession(
+      session.copyWith(lastSeenAt: lastSeenAt),
+    );
+  }
+
+  void _startForegroundSessionTimer() {
+    _foregroundSessionTimer?.cancel();
+    if (!_shouldTrackForegroundDuration) {
+      return;
+    }
+    _foregroundSessionTimer = Timer.periodic(
+      config.foregroundDurationCheckpointInterval,
+      (_) {
+        unawaited(_checkpointForegroundSession());
+      },
+    );
+  }
+
+  DateTime _maxTime(DateTime left, DateTime right) {
+    return left.isAfter(right) ? left : right;
+  }
+
   void _afterEnqueue() {
     if (!_isStarted) {
       return;
@@ -384,6 +497,10 @@ class RenaRTK {
   void dispose() {
     _flushTimer?.cancel();
     _flushTimer = null;
+    unawaited(_checkpointForegroundSession());
+    _foregroundSessionTimer?.cancel();
+    _foregroundSessionTimer = null;
+    _foregroundSessionActive = false;
     _lifecycleBinding?.dispose();
     _lifecycleBinding = null;
     _transport.close();

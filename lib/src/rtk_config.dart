@@ -17,6 +17,8 @@ class RTKConfig {
     this.locale,
     this.debug = kDebugMode,
     this.enabled = true,
+    this.trackForegroundDuration = true,
+    this.foregroundDurationCheckpointInterval = const Duration(seconds: 15),
     this.flushAt = 20,
     this.flushInterval = const Duration(seconds: 30),
     this.maxQueueSize = 1000,
@@ -63,6 +65,10 @@ class RTKConfig {
       );
     }
     _validatePositiveDuration(flushInterval, 'flushInterval');
+    _validatePositiveDuration(
+      foregroundDurationCheckpointInterval,
+      'foregroundDurationCheckpointInterval',
+    );
     _validatePositiveDuration(requestTimeout, 'requestTimeout');
     _validatePositiveDuration(minRetryDelay, 'minRetryDelay');
     _validatePositiveDuration(maxRetryDelay, 'maxRetryDelay');
@@ -86,6 +92,8 @@ class RTKConfig {
   final String? locale;
   final bool debug;
   final bool enabled;
+  final bool trackForegroundDuration;
+  final Duration foregroundDurationCheckpointInterval;
   final int flushAt;
   final Duration flushInterval;
   final int maxQueueSize;

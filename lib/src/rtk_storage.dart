@@ -14,6 +14,7 @@ class RTKStorage {
   static const _anonymousIdKey = 'rena_rtk.anonymous_id';
   static const _optOutKey = 'rena_rtk.opt_out';
   static const _queueKey = 'rena_rtk.queue';
+  static const _foregroundSessionKey = 'rena_rtk.foreground_session';
 
   final SharedPreferences _preferences;
   final RTKIdGenerator _idGenerator;
@@ -44,6 +45,7 @@ class RTKStorage {
     await _preferences.setBool(_optOutKey, value);
     if (value) {
       await clearQueue();
+      await clearForegroundSession();
     }
   }
 
@@ -63,6 +65,27 @@ class RTKStorage {
 
   Future<void> clearQueue() async {
     await _preferences.remove(_queueKey);
+  }
+
+  Future<RTKForegroundSession?> loadForegroundSession() async {
+    final row = _preferences.getString(_foregroundSessionKey);
+    if (row == null || row.isEmpty) {
+      return null;
+    }
+    return RTKForegroundSession.fromJson(
+      Map<String, Object?>.from(jsonDecode(row) as Map),
+    );
+  }
+
+  Future<void> saveForegroundSession(RTKForegroundSession session) async {
+    await _preferences.setString(
+      _foregroundSessionKey,
+      jsonEncode(session.toJson()),
+    );
+  }
+
+  Future<void> clearForegroundSession() async {
+    await _preferences.remove(_foregroundSessionKey);
   }
 
   Map<String, Object?> _queuedItemToJson(RTKQueuedItem item) {
@@ -119,4 +142,48 @@ class RTKStorage {
       ),
     );
   }
+}
+
+class RTKForegroundSession {
+  const RTKForegroundSession({
+    required this.startedAt,
+    required this.lastSeenAt,
+  });
+
+  final DateTime startedAt;
+  final DateTime lastSeenAt;
+
+  RTKForegroundSession copyWith({
+    DateTime? startedAt,
+    DateTime? lastSeenAt,
+  }) {
+    return RTKForegroundSession(
+      startedAt: startedAt ?? this.startedAt,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'started_at': startedAt.toUtc().toIso8601String(),
+      'last_seen_at': lastSeenAt.toUtc().toIso8601String(),
+    };
+  }
+
+  factory RTKForegroundSession.fromJson(Map<String, Object?> json) {
+    return RTKForegroundSession(
+      startedAt: DateTime.parse(json['started_at']! as String).toUtc(),
+      lastSeenAt: DateTime.parse(json['last_seen_at']! as String).toUtc(),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is RTKForegroundSession &&
+        other.startedAt == startedAt &&
+        other.lastSeenAt == lastSeenAt;
+  }
+
+  @override
+  int get hashCode => Object.hash(startedAt, lastSeenAt);
 }

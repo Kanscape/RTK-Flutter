@@ -9,6 +9,7 @@ import 'package:http/testing.dart';
 import 'package:rena_rtk/rena_rtk.dart';
 import 'package:rena_rtk/src/rtk_clock.dart';
 import 'package:rena_rtk/src/rtk_ids.dart';
+import 'package:rena_rtk/src/rtk_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -280,6 +281,53 @@ void main() {
       ]);
     });
 
+    test('sends previous foreground session on next start', () async {
+      final storage = await RTKStorage.create();
+      await storage.saveForegroundSession(
+        RTKForegroundSession(
+          startedAt: DateTime.utc(2026, 6, 10, 12),
+          lastSeenAt: DateTime.utc(2026, 6, 10, 12, 2),
+        ),
+      );
+
+      Map<String, Object?>? body;
+      final client = RenaRTK(
+        config: config(),
+        clock: FakeRTKClock(DateTime.utc(2026, 6, 10, 12, 5)),
+        idGenerator: RTKIdGenerator(seed: 1),
+        httpClient: MockClient((request) async {
+          body = jsonDecode(request.body) as Map<String, Object?>;
+          return http.Response(
+            jsonEncode({'accepted': 2, 'rejected': 0, 'rejections': []}),
+            200,
+          );
+        }),
+      );
+
+      await client.start();
+      await client.flush();
+
+      final items =
+          (body!['items']! as List<Object?>).cast<Map<String, Object?>>();
+      expect(items.map((item) => item['name']), [
+        'app_foreground_session',
+        'app_launch',
+      ]);
+      expect(items.first['timestamp'], '2026-06-10T12:02:00Z');
+      expect(items.first['properties'], {
+        'duration_ms': 120000,
+        'started_at': '2026-06-10T12:00:00Z',
+        'ended_at': '2026-06-10T12:02:00Z',
+        'recovered': true,
+      });
+      final restoredStorage = await RTKStorage.create();
+      final activeSession = await restoredStorage.loadForegroundSession();
+      expect(activeSession?.startedAt, DateTime.utc(2026, 6, 10, 12, 5));
+      expect(activeSession?.lastSeenAt, DateTime.utc(2026, 6, 10, 12, 5));
+
+      client.dispose();
+    });
+
     test('persists queued telemetry before any flush', () async {
       final client = RenaRTK(
         config: RTKConfig(
@@ -307,7 +355,7 @@ void main() {
       );
       await restored.start();
 
-      expect(restored.pendingCount, 3);
+      expect(restored.pendingCount, 4);
 
       client.dispose();
       restored.dispose();

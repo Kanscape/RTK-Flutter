@@ -1,21 +1,30 @@
 import 'package:flutter/widgets.dart';
 
 typedef RTKFlushCallback = Future<void> Function();
+typedef RTKLifecycleCallback = Future<void> Function();
 
 class RTKLifecycleController {
-  RTKLifecycleController({required this.onFlush});
+  RTKLifecycleController({
+    required this.onFlush,
+    this.onResume,
+    this.onBackground,
+  });
 
   final RTKFlushCallback onFlush;
+  final RTKLifecycleCallback? onResume;
+  final RTKLifecycleCallback? onBackground;
 
   Future<void> handleState(AppLifecycleState state) async {
     switch (state) {
       case AppLifecycleState.resumed:
+        await onResume?.call();
         await onFlush();
         return;
       case AppLifecycleState.inactive:
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
+        await onBackground?.call();
         await onFlush();
         return;
     }

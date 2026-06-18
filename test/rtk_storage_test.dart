@@ -59,5 +59,33 @@ void main() {
       expect(restored.single.attemptCount, 2);
       expect(restored.single.nextRetryAt, DateTime.utc(2026, 6, 10, 12, 1));
     });
+
+    test('persists foreground session checkpoint', () async {
+      final storage = await RTKStorage.create();
+      final session = RTKForegroundSession(
+        startedAt: DateTime.utc(2026, 6, 10, 12),
+        lastSeenAt: DateTime.utc(2026, 6, 10, 12, 2),
+      );
+
+      await storage.saveForegroundSession(session);
+
+      final restored = await RTKStorage.create();
+      expect(await restored.loadForegroundSession(), session);
+    });
+
+    test('clears foreground session checkpoint', () async {
+      final storage = await RTKStorage.create();
+      await storage.saveForegroundSession(
+        RTKForegroundSession(
+          startedAt: DateTime.utc(2026, 6, 10, 12),
+          lastSeenAt: DateTime.utc(2026, 6, 10, 12, 2),
+        ),
+      );
+
+      await storage.clearForegroundSession();
+
+      final restored = await RTKStorage.create();
+      expect(await restored.loadForegroundSession(), isNull);
+    });
   });
 }

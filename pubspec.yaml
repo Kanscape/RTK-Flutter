@@ -1,6 +1,6 @@
 name: rena_rtk
 description: "Rena Telemetry Kit Flutter SDK for sending manual telemetry and errors to Rena server."
-version: 0.2.0
+version: 0.3.0
 homepage: https://github.com/Kanscape/RTK-Flutter
 repository: https://github.com/Kanscape/RTK-Flutter
 issue_tracker: https://github.com/Kanscape/RTK-Flutter/issues

@@ -16,6 +16,7 @@ The SDK collects only telemetry submitted through its public API. It does not in
 - Super properties shared across events and errors.
 - Batched delivery to `POST /v1/batch`.
 - Automatic flush based on `flushAt`, `flushInterval`, and app lifecycle.
+- Automatic foreground duration tracking with local checkpoints.
 - Automatic runtime context for platform, locale, OS version, and device model when available.
 - Persistent anonymous ID, opt-out state, and pending queue.
 - Retry with exponential backoff for rate limits, server failures, timeouts, and network errors.
@@ -38,7 +39,7 @@ dependencies:
   rena_rtk:
     git:
       url: https://github.com/Kanscape/RTK-Flutter.git
-      ref: v0.2.0
+      ref: v0.3.0
 ```
 
 ## Initialize
@@ -101,6 +102,34 @@ RTK.addBreadcrumb(
 
 Breadcrumbs are attached only to subsequent `captureError` calls. They are not sent as standalone events.
 
+## Foreground Duration
+
+The SDK tracks app foreground duration by default. It stores the current foreground segment locally and sends the previous segment the next time the app starts or returns to foreground.
+
+It sends an `app_foreground_session` event:
+
+```json
+{
+  "duration_ms": 120000,
+  "started_at": "2026-06-10T12:00:00Z",
+  "ended_at": "2026-06-10T12:02:00Z",
+  "recovered": true
+}
+```
+
+The SDK updates the local foreground checkpoint every 15 seconds by default. If the app is killed before the next checkpoint, the duration may be shorter by up to one checkpoint interval.
+
+Configuration:
+
+```dart
+RTKConfig(
+  endpoint: Uri.parse(const String.fromEnvironment('RENA_ENDPOINT')),
+  publicWriteKey: const String.fromEnvironment('RENA_PUBLIC_WRITE_KEY'),
+  trackForegroundDuration: true,
+  foregroundDurationCheckpointInterval: const Duration(seconds: 15),
+)
+```
+
 ## Flush and Opt Out
 
 ```dart
@@ -162,6 +191,8 @@ By default, the SDK does not automatically collect:
 - Screenshots.
 
 The SDK can automatically include runtime platform, locale, OS name, OS version, and device model in telemetry context.
+
+Foreground duration tracking sends only timing metadata and the SDK anonymous ID already attached to batches. It does not collect screen names or user input.
 
 ## Rena Ingest Limits
 
