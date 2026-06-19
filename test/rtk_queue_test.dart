@@ -11,6 +11,14 @@ void main() {
     );
   }
 
+  RTKError error(String message) {
+    return RTKError(
+      errorType: 'StateError',
+      message: message,
+      timestamp: DateTime.utc(2026, 6, 10, 12),
+    );
+  }
+
   const context = RTKContext();
 
   group('RTKQueue', () {
@@ -154,6 +162,26 @@ void main() {
 
       expect(batch.items.map((item) => item.item.toJson()['name']), [
         'send_now',
+      ]);
+    });
+
+    test('removeWhere removes matching queued items only', () {
+      final queue = RTKQueue(maxQueueSize: 10);
+      queue.enqueue(event('feature_used'));
+      queue.enqueue(error('failed'));
+      queue.enqueue(event('screen_view'));
+
+      queue.removeWhere((queued) => queued.item is RTKError);
+
+      final batch = queue.takeBatch(
+        context: context,
+        maxItems: 100,
+        maxBytes: 256 * 1024,
+      );
+
+      expect(batch.items.map((item) => item.item.toJson()['name']), [
+        'feature_used',
+        'screen_view',
       ]);
     });
   });

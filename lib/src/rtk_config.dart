@@ -17,6 +17,7 @@ class RTKConfig {
     this.locale,
     this.debug = kDebugMode,
     this.enabled = true,
+    this.diagnosticsEnabled = true,
     this.trackForegroundDuration = true,
     this.foregroundDurationCheckpointInterval = const Duration(seconds: 15),
     this.flushAt = 20,
@@ -92,6 +93,7 @@ class RTKConfig {
   final String? locale;
   final bool debug;
   final bool enabled;
+  final bool diagnosticsEnabled;
   final bool trackForegroundDuration;
   final Duration foregroundDurationCheckpointInterval;
   final int flushAt;

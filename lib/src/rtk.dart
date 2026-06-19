@@ -54,6 +54,7 @@ class RenaRTK {
 
   bool _isStarted = false;
   bool _isOptedOut = false;
+  late bool _diagnosticsEnabled = config.diagnosticsEnabled;
   String? _anonymousId;
   RTKResolvedDeviceInfo _deviceInfo = const RTKResolvedDeviceInfo();
   RTKStorage? _storage;
@@ -68,6 +69,8 @@ class RenaRTK {
 
   bool get isOptedOut => _isOptedOut;
 
+  bool get diagnosticsEnabled => _diagnosticsEnabled;
+
   int get pendingCount => _queue.length;
 
   Future<void> start() async {
@@ -81,9 +84,20 @@ class RenaRTK {
     _deviceInfo = await _resolveDeviceInfo();
     if (!_isOptedOut) {
       final pendingBeforeStart = _queue.items;
-      _queue.restore([...await _storage!.loadQueue(), ...pendingBeforeStart]);
+      final restoredItems = [
+        ...await _storage!.loadQueue(),
+        ...pendingBeforeStart,
+      ];
+      _queue.restore(
+        _diagnosticsEnabled
+            ? restoredItems
+            : restoredItems.where(_isNotDiagnosticItem).toList(),
+      );
     } else {
       _queue.clear();
+    }
+    if (!_diagnosticsEnabled) {
+      _breadcrumbs.clear();
     }
     _isStarted = true;
     _logger.initialized(
@@ -132,7 +146,7 @@ class RenaRTK {
     StackTrace? stackTrace,
     Map<String, Object?>? properties,
   }) {
-    if (!config.enabled || _isOptedOut) {
+    if (!config.enabled || _isOptedOut || !_diagnosticsEnabled) {
       return;
     }
     _enqueue(
@@ -148,7 +162,7 @@ class RenaRTK {
   }
 
   void addBreadcrumb(String name, {Map<String, Object?>? properties}) {
-    if (!config.enabled || _isOptedOut) {
+    if (!config.enabled || _isOptedOut || !_diagnosticsEnabled) {
       return;
     }
     _breadcrumbs.add(
@@ -219,6 +233,28 @@ class RenaRTK {
     _logger.optOutChanged(value);
   }
 
+  Future<void> setDiagnosticsEnabled(bool value) async {
+    if (!_isStarted) {
+      await start();
+    }
+    if (_diagnosticsEnabled == value) {
+      return;
+    }
+    _diagnosticsEnabled = value;
+    if (!value) {
+      await clearPendingDiagnostics();
+    }
+  }
+
+  Future<void> clearPendingDiagnostics() async {
+    if (!_isStarted) {
+      await start();
+    }
+    _clearDiagnosticsFromQueue();
+    _breadcrumbs.clear();
+    await _persistQueue();
+  }
+
   Future<void> flush() => _runFlush('manual');
 
   Future<void> _runFlush(String reason) {
@@ -245,6 +281,13 @@ class RenaRTK {
     }
     if (_isOptedOut || _queue.length == 0) {
       return;
+    }
+    if (!_diagnosticsEnabled) {
+      _clearDiagnosticsFromQueue();
+      await _persistQueue();
+      if (_queue.length == 0) {
+        return;
+      }
     }
 
     _logger.flushStarted(reason: reason, pendingCount: _queue.length);
@@ -351,6 +394,12 @@ class RenaRTK {
         nextRetryAt: item.nextRetryAt!,
       );
     }
+  }
+
+  bool _isNotDiagnosticItem(RTKQueuedItem item) => item.item is! RTKError;
+
+  void _clearDiagnosticsFromQueue() {
+    _queue.removeWhere((item) => item.item is RTKError);
   }
 
   Future<void> _persistQueue() async {
@@ -561,5 +610,30 @@ abstract final class RTK {
     WidgetsFlutterBinding.ensureInitialized();
     final storage = await RTKStorage.create();
     await storage.setOptOut(value);
+  }
+
+  static Future<void> setDiagnosticsEnabled(bool value) async {
+    final client = _instance;
+    if (client != null) {
+      await client.setDiagnosticsEnabled(value);
+      return;
+    }
+    if (!value) {
+      await clearPendingDiagnostics();
+    }
+  }
+
+  static Future<void> clearPendingDiagnostics() async {
+    final client = _instance;
+    if (client != null) {
+      await client.clearPendingDiagnostics();
+      return;
+    }
+    WidgetsFlutterBinding.ensureInitialized();
+    final storage = await RTKStorage.create();
+    final items = await storage.loadQueue();
+    await storage.saveQueue(
+      items.where((item) => item.item is! RTKError).toList(),
+    );
   }
 }

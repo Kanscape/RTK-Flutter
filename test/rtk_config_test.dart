@@ -53,6 +53,7 @@ void main() {
       expect(config.minRetryDelay, const Duration(seconds: 1));
       expect(config.maxRetryDelay, const Duration(seconds: 60));
       expect(config.debug, kDebugMode);
+      expect(config.diagnosticsEnabled, isTrue);
     });
 
     test('allows debug logging to be disabled explicitly', () {

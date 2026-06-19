@@ -101,6 +101,10 @@ class RTKQueue {
     _items.removeWhere(sent.contains);
   }
 
+  void removeWhere(bool Function(RTKQueuedItem item) test) {
+    _items.removeWhere(test);
+  }
+
   void restore(List<RTKQueuedItem> items) {
     final overflow = items.length - maxQueueSize;
     final start = overflow > 0 ? overflow : 0;
